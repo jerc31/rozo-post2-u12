@@ -11,9 +11,11 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
+      # Checkout descarga el código del repositorio al runner de GitHub
       - name: Checkout del código
         uses: actions/checkout@v4
 
+      # Configurar el entorno de Java necesario para compilar Spring Boot
       - name: Configurar JDK 21 con caché Maven
         uses: actions/setup-java@v4
         with:
