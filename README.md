@@ -53,6 +53,7 @@ Antes de ejecutar el pipeline o el proyecto, asegúrate de tener:
 ## Dependencias (CI/CD)
 
 **Arquitectura del Pipeline**
+
 ```text
  post2/
    ├── .github/
@@ -65,6 +66,7 @@ Antes de ejecutar el pipeline o el proyecto, asegúrate de tener:
 ```
 
 **Plugin de Cobertura en `pom.xml`:**
+
 ```xml
 <plugin>
     <groupId>org.jacoco</groupId>
@@ -92,14 +94,17 @@ Antes de ejecutar el pipeline o el proyecto, asegúrate de tener:
 ## Componentes de Seguridad y Despliegue CI/CD
 
 ### 1. GitHub Secrets
+
 - **Decisión de diseño:**
   En lugar de colocar las contraseñas de Docker Hub en el código del YAML (práctica muy insegura), se guardan bajo las variables protegidas `DOCKERHUB_USERNAME` y `DOCKERHUB_TOKEN`. Así, nunca se exponen en texto plano.
 
 ### 2. JaCoCo Coverage Report
+
 - **Decisión de diseño:**
   Se adjunta el reporte generado en `target/site/jacoco` como un artefacto descargable al terminar el Job de CI, lo que facilita auditar la calidad del software antes de generar la imagen.
 
 ### 3. Etiquetado Múltiple de Imagen (Tags)
+
 - **Decisión de diseño:**
   La imagen no solo se sube como `latest`, sino que también se le asocia el SHA corto del commit (`sha-XXXXXXX`). Esto permite hacer rastreo exacto de la versión si existe un bug en producción.
 
@@ -108,16 +113,19 @@ Antes de ejecutar el pipeline o el proyecto, asegúrate de tener:
 ## Ejecución del Proyecto
 
 1. Clonar repositorio:
+
 ```bash
 git clone https://github.com/jerc31/rozo-post2-u12.git
 ```
 
 2. Ejecutar pruebas unitarias en local:
+
 ```bash
 ./mvnw clean verify
 ```
 
 3. Descargar y ejecutar la imagen compilada por Actions:
+
 ```bash
 docker pull jhoseth/rozo-post2-u12:latest
 docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev jhoseth/rozo-post2-u12:latest
@@ -128,13 +136,16 @@ docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev jhoseth/rozo-post2-u12:lat
 ## Checkpoints de CI/CD
 
 ✓ **Checkpoint 1: Configuración de Secrets**
+
 - Acciones en GitHub: Verificación de secretos añadidos en el menú de Actions.
 
 ✓ **Checkpoint 2: Job de Pruebas (CI)**
+
 - Evento: Push a main.
 - Resultado: El runner de Ubuntu levanta el JDK 21, pasa los test unitarios y adjunta el `.zip` de cobertura JaCoCo.
 
 ✓ **Checkpoint 3: Publicación en Docker Hub (CD)**
+
 - Condición: El paso anterior termina con éxito.
 - Resultado: `docker-publish` sube la imagen y el repositorio en Docker Hub refleja las etiquetas (`latest` y `sha`).
 
@@ -152,16 +163,20 @@ docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev jhoseth/rozo-post2-u12:lat
 
 ## Capturas del Proyecto
 
-Las siguientes evidencias se encuentran en la carpeta `/evidencias/` o adjuntas al documento PDF:
+Las siguientes capturas se encuentran en la carpeta `/evidencias/`
 
 ### GitHub Secrets Configuradas
-![Captura Secrets](evidencias/captura_github_secrets.png)
+
+![Secrets](evidencias/captura_secrets_creados.png)
 
 ### Workflow Actions Exitoso
-![Captura Actions](evidencias/captura_actions_exitoso.png)
+
+![Actions](evidencias/captura_jobs_pasados.png)
 
 ### Reporte de JaCoCo Descargable
-![Captura JaCoCo](evidencias/captura_jacoco_artefacto.png)
+
+![JaCoCo](evidencias/captura_jacoco_report.png)
 
 ### Imagen Publicada en Docker Hub
-![Captura Docker Hub](evidencias/captura_dockerhub_publicado.png)
+
+![Docker_Hub](evidencias/captura_docker_hub.png)
