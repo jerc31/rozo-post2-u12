@@ -24,7 +24,7 @@ jobs:
           cache: maven
 
       - name: Compilar y ejecutar pruebas con cobertura
-        run: ./mvnw clean verify || mvn clean verify
+        run: chmod +x ./mvnw && ./mvnw clean verify || mvn clean verify
 
       - name: Publicar reporte JaCoCo como artefacto
         uses: actions/upload-artifact@v4
