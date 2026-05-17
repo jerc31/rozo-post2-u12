@@ -119,8 +119,8 @@ git clone https://github.com/jerc31/rozo-post2-u12.git
 
 3. Descargar y ejecutar la imagen compilada por Actions:
 ```bash
-docker pull jerc31/mi-spring-app:latest
-docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev jerc31/mi-spring-app:latest
+docker pull jhoseth/rozo-post2-u12:latest
+docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev jhoseth/rozo-post2-u12:latest
 ```
 
 ---

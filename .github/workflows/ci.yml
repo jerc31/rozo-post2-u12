@@ -53,7 +53,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/mi-spring-app
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/rozo-post2-u12
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-,format=short
