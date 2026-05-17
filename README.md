@@ -1,4 +1,4 @@
-# Despliegue y CI/CD en Railway
+# Módulo de CI/CD Seguro en Spring Boot
 
 ![CI/CD Status](https://github.com/jerc31/rozo-post2-u12/actions/workflows/ci.yml/badge.svg)
 
@@ -15,85 +15,153 @@
 
 ## Descripción del Proyecto
 
-Este proyecto implementa un pipeline completo de Integración Continua y Entrega Continua (CI/CD) usando GitHub Actions. A partir de la contenedorización de una aplicación Spring Boot mediante Docker y su orquestación local con Docker Compose (Post 1), se ha añadido la automatización de pruebas y publicación.
+Este proyecto implementa un pipeline de Integración Continua y Entrega Continua (CI/CD) avanzado en GitHub Actions, basándose en la contenedorización de la aplicación Spring Boot creada previamente.
 
 Se integran mecanismos modernos como:
 
-- **GitHub Actions** para el pipeline de CI/CD.
-- **JaCoCo** para el reporte de cobertura de pruebas unitarias.
-- **Docker Hub** para la publicación de la imagen multi-stage.
-- **GitHub Secrets** para el manejo seguro de credenciales.
+- **GitHub Actions** para automatizar el pipeline de CI/CD.
+- **JaCoCo** para métricas y reporte de cobertura de pruebas unitarias.
+- **Docker Hub** para publicación automática de imágenes multi-stage.
+- **GitHub Secrets** para encriptar y gestionar credenciales de manera segura.
 
-El objetivo es garantizar que cada cambio en el repositorio principal pase por pruebas automatizadas y genere una imagen lista para producción.
+El objetivo es asegurar que la construcción, las pruebas y la publicación de imágenes en Docker Hub sucedan de forma completamente autónoma en cada cambio integrado a la rama principal, manteniendo altos estándares de calidad y seguridad.
 
 ---
 
-## Pipeline CI/CD
+## Objetivo
 
-El pipeline se activa automáticamente en cada push a la rama `main` y realiza:
+Implementar un sistema CI/CD que permita:
 
-1. Compilación con Maven y ejecución de pruebas unitarias.
-2. Generación de reporte de cobertura JaCoCo como artefacto.
-3. Construcción de imagen Docker con multi-stage build.
-4. Publicación de la imagen en Docker Hub con tags `latest` y `sha-<commit>`.
+- Ejecutar pruebas unitarias de forma automática (CI).
+- Generar e importar artefactos de cobertura con JaCoCo.
+- Construir imágenes Docker multiplataforma sin interacción manual.
+- Publicar la imagen generada en un registro público de forma segura (CD).
 
-## Imagen Docker
+---
 
-Puedes descargar la imagen pública generada por el pipeline directamente desde Docker Hub (reemplaza `<usuario>` por el usuario de Docker Hub configurado en los Secrets):
+## Prerrequisitos
 
-```bash
-docker pull <usuario>/mi-spring-app:latest
-docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev <usuario>/mi-spring-app:latest
+Antes de ejecutar el pipeline o el proyecto, asegúrate de tener:
+
+- Una cuenta activa en **Docker Hub**.
+- Git configurado localmente.
+- Haber creado un **Access Token** de solo lectura/escritura en Docker Hub (Sección Security).
+- Haber configurado los secretos en tu repositorio (`Settings -> Secrets and variables -> Actions`).
+
+---
+
+## Dependencias (CI/CD)
+
+**Arquitectura del Pipeline**
+```text
+ post2/
+   ├── .github/
+   │   └── workflows/
+   │       └── ci.yml
+   ├── Dockerfile
+   ├── docker-compose.yml
+   ├── pom.xml (Con plugin de JaCoCo)
+   └── src/
+```
+
+**Plugin de Cobertura en `pom.xml`:**
+```xml
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.11</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
 ```
 
 ---
 
-## Prerrequisitos (CI/CD)
+## Componentes de Seguridad y Despliegue CI/CD
 
-Para que el pipeline funcione en tu repositorio fork/clonado, debes configurar los siguientes GitHub Secrets en `Settings -> Secrets and variables -> Actions`:
+### 1. GitHub Secrets
+- **Decisión de diseño:**
+  En lugar de colocar las contraseñas de Docker Hub en el código del YAML (práctica muy insegura), se guardan bajo las variables protegidas `DOCKERHUB_USERNAME` y `DOCKERHUB_TOKEN`. Así, nunca se exponen en texto plano.
 
-- `DOCKERHUB_USERNAME`: Tu usuario de Docker Hub.
-- `DOCKERHUB_TOKEN`: Tu Access Token de Docker Hub (NO usar la contraseña principal).
+### 2. JaCoCo Coverage Report
+- **Decisión de diseño:**
+  Se adjunta el reporte generado en `target/site/jacoco` como un artefacto descargable al terminar el Job de CI, lo que facilita auditar la calidad del software antes de generar la imagen.
+
+### 3. Etiquetado Múltiple de Imagen (Tags)
+- **Decisión de diseño:**
+  La imagen no solo se sube como `latest`, sino que también se le asocia el SHA corto del commit (`sha-XXXXXXX`). Esto permite hacer rastreo exacto de la versión si existe un bug en producción.
 
 ---
 
-## Ejecución Local del Proyecto
+## Ejecución del Proyecto
 
 1. Clonar repositorio:
-   ```bash
-   git clone https://github.com/jerc31/rozo-post2-u12.git
-   cd rozo-post2-u12
-   ```
+```bash
+git clone https://github.com/jerc31/rozo-post2-u12.git
+```
 
-2. Ejecutar pruebas locales y generar reporte JaCoCo:
-   ```bash
-   ./mvnw clean verify
-   ```
+2. Ejecutar pruebas unitarias en local:
+```bash
+./mvnw clean verify
+```
 
-3. Ejecutar con Docker Compose (como en Post 1):
-   ```bash
-   docker compose up -d --build
-   ```
+3. Descargar y ejecutar la imagen compilada por Actions:
+```bash
+docker pull jerc31/mi-spring-app:latest
+docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev jerc31/mi-spring-app:latest
+```
 
 ---
 
-## Checkpoints y Verificaciones
+## Checkpoints de CI/CD
 
 ✓ **Checkpoint 1: Configuración de Secrets**
-- *Se han configurado los GitHub Secrets `DOCKERHUB_USERNAME` y `DOCKERHUB_TOKEN` en el repositorio.*
+- Acciones en GitHub: Verificación de secretos añadidos en el menú de Actions.
 
-✓ **Checkpoint 2: Ejecución de Job de CI**
-- *El job `build-and-test` compila y ejecuta la prueba unitaria sin errores. El reporte JaCoCo queda como artefacto en GitHub Actions.*
+✓ **Checkpoint 2: Job de Pruebas (CI)**
+- Evento: Push a main.
+- Resultado: El runner de Ubuntu levanta el JDK 21, pasa los test unitarios y adjunta el `.zip` de cobertura JaCoCo.
 
-✓ **Checkpoint 3: Job de CD y Docker Hub**
-- *El job `docker-publish` sube exitosamente la imagen a Docker Hub. El Badge de GitHub Actions muestra estado verde en este README.*
+✓ **Checkpoint 3: Publicación en Docker Hub (CD)**
+- Condición: El paso anterior termina con éxito.
+- Resultado: `docker-publish` sube la imagen y el repositorio en Docker Hub refleja las etiquetas (`latest` y `sha`).
 
 ---
 
-## Evidencias
+## Flujo Completo de Seguridad y CI/CD
 
-Las siguientes evidencias se encuentran en la carpeta `/evidencias/`:
+- El desarrollador integra nuevo código a la rama principal (`main`).
+- GitHub Actions dispara el workflow.
+- **Fase CI**: Se verifica la integridad del código, pasando test de JUnit y generando métricas.
+- **Fase CD**: Se autentica de forma segura con Docker Hub.
+- **Entrega**: Se lanza la nueva versión para que cualquier servidor o Railway la consuma.
 
-- Captura del historial de GitHub Actions con los jobs exitosos.
-- Captura del reporte JaCoCo descargable.
-- Captura de Docker Hub con los tags `latest` y `sha-XXXX` de la imagen.
+---
+
+## Capturas del Proyecto
+
+Las siguientes evidencias se encuentran en la carpeta `/evidencias/` o adjuntas al documento PDF:
+
+### GitHub Secrets Configuradas
+![Captura Secrets](evidencias/captura_github_secrets.png)
+
+### Workflow Actions Exitoso
+![Captura Actions](evidencias/captura_actions_exitoso.png)
+
+### Reporte de JaCoCo Descargable
+![Captura JaCoCo](evidencias/captura_jacoco_artefacto.png)
+
+### Imagen Publicada en Docker Hub
+![Captura Docker Hub](evidencias/captura_dockerhub_publicado.png)
